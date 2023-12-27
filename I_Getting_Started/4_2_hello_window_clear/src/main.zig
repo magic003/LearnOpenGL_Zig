@@ -28,8 +28,13 @@ pub fn main() !void {
     window.setFramebufferSizeCallback(frameBufferSizeCallback);
 
     while (!window.shouldClose()) {
-        window.swapBuffers();
+        processInput(window);
+
+        gl.clearColor(0.2, 0.3, 0.3, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
         glfw.pollEvents();
+        window.swapBuffers();
     }
 }
 
@@ -39,4 +44,10 @@ fn glGetProcAddress(_: glfw.GLProc, proc: [:0]const u8) ?*const anyopaque {
 
 fn frameBufferSizeCallback(_: glfw.Window, width: u32, height: u32) void {
     gl.viewport(0, 0, @intCast(width), @intCast(height));
+}
+
+fn processInput(window: glfw.Window) void {
+    if (window.getKey(.escape) == .press) {
+        window.setShouldClose(true);
+    }
 }
