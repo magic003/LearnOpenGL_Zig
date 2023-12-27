@@ -1,17 +1,25 @@
 const std = @import("std");
+const glfw = @import("mach-glfw");
 
 pub fn main() !void {
-    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
+    _ = glfw.init(.{});
+    defer glfw.terminate();
 
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
+    const hints = glfw.Window.Hints{
+        .context_version_major = 3,
+        .context_version_minor = 3,
+        .opengl_profile = .opengl_core_profile,
+    };
+    const window = glfw.Window.create(800, 600, "LearnOpenGL", null, null, hints) orelse {
+        std.log.err("Failed to create GLFW window: {?s}", .{glfw.getErrorString()});
+        std.process.exit(1);
+    };
+    defer window.destroy();
 
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
+    glfw.makeContextCurrent(window);
 
-    try bw.flush(); // don't forget to flush!
+    while (!window.shouldClose()) {
+        window.swapBuffers();
+        glfw.pollEvents();
+    }
 }
