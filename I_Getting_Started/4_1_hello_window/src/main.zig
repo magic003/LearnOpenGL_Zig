@@ -11,7 +11,9 @@ pub fn main() !void {
         .context_version_minor = 3,
         .opengl_profile = .opengl_core_profile,
     };
-    const window = glfw.Window.create(800, 600, "LearnOpenGL", null, null, hints) orelse {
+    const width = 800;
+    const height = 600;
+    const window = glfw.Window.create(width, height, "LearnOpenGL", null, null, hints) orelse {
         std.log.err("Failed to create GLFW window: {?s}", .{glfw.getErrorString()});
         std.process.exit(1);
     };
@@ -22,6 +24,9 @@ pub fn main() !void {
     const proc: glfw.GLProc = undefined;
     try gl.load(proc, glGetProcAddress);
 
+    gl.viewport(0, 0, @intCast(width), @intCast(height));
+    window.setFramebufferSizeCallback(frameBufferSizeCallback);
+
     while (!window.shouldClose()) {
         window.swapBuffers();
         glfw.pollEvents();
@@ -30,4 +35,8 @@ pub fn main() !void {
 
 fn glGetProcAddress(_: glfw.GLProc, proc: [:0]const u8) ?*const anyopaque {
     return glfw.getProcAddress(proc);
+}
+
+fn frameBufferSizeCallback(_: glfw.Window, width: u32, height: u32) void {
+    gl.viewport(0, 0, @intCast(width), @intCast(height));
 }
