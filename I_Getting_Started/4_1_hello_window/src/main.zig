@@ -1,5 +1,6 @@
 const std = @import("std");
 const glfw = @import("mach-glfw");
+const gl = @import("gl");
 
 pub fn main() !void {
     _ = glfw.init(.{});
@@ -18,8 +19,15 @@ pub fn main() !void {
 
     glfw.makeContextCurrent(window);
 
+    const proc: glfw.GLProc = undefined;
+    try gl.load(proc, glGetProcAddress);
+
     while (!window.shouldClose()) {
         window.swapBuffers();
         glfw.pollEvents();
     }
+}
+
+fn glGetProcAddress(_: glfw.GLProc, proc: [:0]const u8) ?*const anyopaque {
+    return glfw.getProcAddress(proc);
 }
