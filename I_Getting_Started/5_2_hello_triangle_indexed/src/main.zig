@@ -86,22 +86,34 @@ pub fn main() !void {
 
     // set up vertex data and configure vertex attributes
     const vertices = [_]f32{
-        -0.5, -0.5, 0.0,
-        0.5,  -0.5, 0.0,
-        0.0,  0.5,  0.0,
+        0.5, 0.5, 0.0, // top right
+        0.5, -0.5, 0.0, // bottom right
+        -0.5, -0.5, 0.0, // bottom left
+        -0.5, 0.5, 0.0, // top left
     };
+    const indices = [_]c_uint{
+        0, 1, 3,
+        1, 2, 3,
+    };
+
     var vaos = [_]c_uint{0};
     var vbos = [_]c_uint{0};
+    var ebos = [_]c_uint{0};
     gl.genVertexArrays(1, &vaos);
     defer gl.deleteVertexArrays(1, &vaos);
     gl.genBuffers(1, &vbos);
     defer gl.deleteBuffers(1, &vbos);
+    gl.genBuffers(1, &ebos);
+    defer gl.deleteBuffers(1, &ebos);
 
     const vao = vaos[0];
     const vbo = vbos[0];
+    const ebo = ebos[0];
     gl.bindVertexArray(vao);
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     gl.bufferData(gl.ARRAY_BUFFER, @sizeOf(f32) * vertices.len, &vertices, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, @sizeOf(c_uint) * indices.len, &indices, gl.STATIC_DRAW);
 
     gl.vertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, 3 * @sizeOf(f32), null);
     gl.enableVertexAttribArray(0);
@@ -117,7 +129,7 @@ pub fn main() !void {
 
         gl.useProgram(shader_program);
         gl.bindVertexArray(vao);
-        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, null);
 
         glfw.pollEvents();
         window.swapBuffers();
