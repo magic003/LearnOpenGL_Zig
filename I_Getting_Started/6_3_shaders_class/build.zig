@@ -26,6 +26,13 @@ pub fn build(b: *std.Build) void {
         .source_file = .{ .path = "../../libs/opengl/gl33.zig" },
     }));
 
+    // Use libs from LearnOpenGL
+    const learnopengl_dep = b.dependency("learnopengl", . {
+        .target = target,
+        .optimize = optimize,
+    });
+    exe.addModule("learnopengl", learnopengl_dep.module("learnopengl"));
+
     const run_cmd = b.addRunArtifact(exe);
     run_cmd.step.dependOn(b.getInstallStep());
 
