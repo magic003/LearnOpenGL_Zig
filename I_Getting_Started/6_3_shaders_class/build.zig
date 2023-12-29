@@ -15,19 +15,21 @@ pub fn build(b: *std.Build) void {
 
     // Use mach-glfw
     const glfw_dep = b.dependency("mach_glfw", .{
-        .target = exe.target,
-        .optimize = exe.optimize,
+        .target = target,
+        .optimize = optimize,
     });
     exe.addModule("mach-glfw", glfw_dep.module("mach-glfw"));
     @import("mach_glfw").link(glfw_dep.builder, exe);
 
     // Use OpenGL
-    exe.addModule("gl", b.createModule(.{
-        .source_file = .{ .path = "../../libs/opengl/gl33.zig" },
-    }));
+    const opengl_dep = b.dependency("opengl", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    exe.addModule("gl", opengl_dep.module("opengl"));
 
     // Use libs from LearnOpenGL
-    const learnopengl_dep = b.dependency("learnopengl", . {
+    const learnopengl_dep = b.dependency("learnopengl", .{
         .target = target,
         .optimize = optimize,
     });
@@ -38,4 +40,10 @@ pub fn build(b: *std.Build) void {
 
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
+
+    // Install the shader files
+    const install_vs_step = b.addInstallFile(.{ .path = "src/6_3_shader.vs" }, "bin/6_3_shader.vs");
+    run_step.dependOn(&install_vs_step.step);
+    const install_fs_step = b.addInstallFile(.{ .path = "src/6_3_shader.fs" }, "bin/6_3_shader.fs");
+    run_step.dependOn(&install_fs_step.step);
 }

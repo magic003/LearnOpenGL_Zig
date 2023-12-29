@@ -1,33 +1,7 @@
 const std = @import("std");
 const glfw = @import("mach-glfw");
 const gl = @import("gl");
-
-const vertex_sharder_source =
-    \\#version 330 core
-    \\
-    \\layout (location = 0) in vec3 aPos;
-    \\layout (location = 1) in vec3 aColor;
-    \\
-    \\out vec3 ourColor;
-    \\
-    \\void main()
-    \\{
-    \\    gl_Position = vec4(aPos, 1.0);
-    \\    ourColor = aColor;
-    \\}
-;
-const fragment_sharder_source =
-    \\#version 330 core
-    \\
-    \\in vec3 ourColor;
-    \\
-    \\out vec4 FragColor;
-    \\
-    \\void main()
-    \\{
-    \\    FragColor = vec4(ourColor, 1.0);
-    \\}
-;
+const learnopengl = @import("learnopengl");
 
 pub fn main() !void {
     _ = glfw.init(.{});
@@ -54,41 +28,7 @@ pub fn main() !void {
     gl.viewport(0, 0, @intCast(width), @intCast(height));
     window.setFramebufferSizeCallback(frameBufferSizeCallback);
 
-    // build and compile the shader program
-    const vertex_shader = gl.createShader(gl.VERTEX_SHADER);
-    const vertext_sources = [_][*c]const u8{&vertex_sharder_source.*};
-    gl.shaderSource(vertex_shader, vertext_sources.len, &vertext_sources, null);
-    gl.compileShader(vertex_shader);
-    var success = [_]c_int{0};
-    var info_log: [512]u8 = undefined;
-    gl.getShaderiv(vertex_shader, gl.COMPILE_STATUS, &success);
-    if (success[0] == 0) {
-        gl.getShaderInfoLog(vertex_shader, 512, null, &info_log);
-        std.log.err("Vertext shader compilation failed: {s}", .{info_log});
-    }
-
-    const fragment_shader = gl.createShader(gl.FRAGMENT_SHADER);
-    const fragment_sources = [_][*c]const u8{&fragment_sharder_source.*};
-    gl.shaderSource(fragment_shader, fragment_sources.len, &fragment_sources, null);
-    gl.compileShader(fragment_shader);
-    gl.getShaderiv(fragment_shader, gl.COMPILE_STATUS, &success);
-    if (success[0] == 0) {
-        gl.getShaderInfoLog(fragment_shader, 512, null, &info_log);
-        std.log.err("Fragment shader compilation failed: {s}", .{info_log});
-    }
-
-    const shader_program = gl.createProgram();
-    defer gl.deleteProgram(shader_program);
-    gl.attachShader(shader_program, vertex_shader);
-    gl.attachShader(shader_program, fragment_shader);
-    gl.linkProgram(shader_program);
-    gl.getProgramiv(shader_program, gl.LINK_STATUS, &success);
-    if (success[0] == 0) {
-        gl.getProgramInfoLog(shader_program, 512, null, &info_log);
-        std.log.err("Shader program link failed: {s}", .{info_log});
-    }
-    gl.deleteShader(vertex_shader);
-    gl.deleteShader(fragment_shader);
+    const shader = try learnopengl.Shader.init("6_3_shader.vs", "6_3_shader.fs");
 
     // set up vertex data and configure vertex attributes
     const vertices = [_]f32{
@@ -124,7 +64,7 @@ pub fn main() !void {
         gl.clearColor(0.2, 0.3, 0.3, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        gl.useProgram(shader_program);
+        shader.use();
         gl.bindVertexArray(vao);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
 
