@@ -63,16 +63,16 @@ pub fn use(self: Shader) void {
 }
 
 // Sets the uniform bool value.
-pub fn setBool(self: Shader, name: [:0]const u8, value: bool) void {
-    gl.uniform1i(gl.getUniformLocation(self.ID, &name.*), @intFromBool(value));
+pub fn setBool(self: Shader, name: [*c]const u8, value: bool) void {
+    gl.uniform1i(gl.getUniformLocation(self.ID, name), @intFromBool(value));
 }
 
 // Sets the uniform int value.
-pub fn setInt(self: Shader, name: [:0]const u8, value: u32) void {
-    gl.uniform1i(gl.getUniformLocation(self.ID, &name.*), @intCast(value));
+pub fn setInt(self: Shader, name: [*c]const u8, value: u32) void {
+    gl.uniform1i(gl.getUniformLocation(self.ID, name), @intCast(value));
 }
 
 // Sets the uniform float value.
-pub fn setFloat(self: Shader, name: [:0]const u8, value: f32) void {
-    gl.uniform1f(gl.getUniformLocation(self.ID, &name.*), value);
+pub fn setFloat(self: Shader, name: [*c]const u8, value: f32) void {
+    gl.uniform1f(gl.getUniformLocation(self.ID, name), value);
 }
