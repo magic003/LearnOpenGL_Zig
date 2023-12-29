@@ -22,9 +22,11 @@ pub fn build(b: *std.Build) void {
     @import("mach_glfw").link(glfw_dep.builder, exe);
 
     // Use OpenGL
-    exe.addModule("gl", b.createModule(.{
-        .source_file = .{ .path = "../../libs/opengl/gl33.zig" },
-    }));
+    const opengl_dep = b.dependency("opengl", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    exe.addModule("gl", opengl_dep.module("opengl"));
 
     const run_cmd = b.addRunArtifact(exe);
     run_cmd.step.dependOn(b.getInstallStep());
