@@ -2,7 +2,11 @@
     .name = "learnopengl",
     .version = "0.0.1",
 
-    .dependencies = .{},
+    .dependencies = .{
+        .opengl = .{
+            .path = "../opengl/",
+        },
+    },
 
     .paths = .{
         "build.zig",

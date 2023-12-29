@@ -1,24 +1,26 @@
 const std = @import("std");
 const gl = @import("gl");
 
-const Shader = @This();
+pub const Shader = @This();
 
 /// The shader program ID.
 ID: c_uint,
 
 /// Creates a Sharder by providing the vertex and fragment shader paths.
 pub fn init(vertex_path: []const u8, fragment_path: []const u8) !Shader {
-    var buffer: [2 * 1024]u8 = undefined;
-    const fba = std.heap.FixedBufferAllocator.init(&buffer);
-    const allocator = fba.allocator();
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
 
-    const vertex_file = try std.fs.cwd().openFile(vertex_path, .{});
+    const exe_dir = try std.fs.selfExeDirPathAlloc(allocator);
+    const vertex_abs_path = try std.fs.path.join(allocator, &.{ exe_dir, vertex_path });
+    const vertex_file = try std.fs.openFileAbsolute(vertex_abs_path, .{});
     defer vertex_file.close();
-    const vertext_code = try vertex_file.readToEndAllocOptions(allocator, 2 * 1024, null, @alignOf(u8), 0);
+    const vertext_code = try vertex_file.readToEndAllocOptions(allocator, 3 * 1024, null, @alignOf(u8), 0);
 
-    const fragment_file = try std.fs.cwd().openFile(fragment_path, .{});
+    const fragment_abs_path = try std.fs.path.join(allocator, &.{ exe_dir, fragment_path });
+    const fragment_file = try std.fs.openFileAbsolute(fragment_abs_path, .{});
     defer fragment_file.close();
-    const fragment_code = try fragment_file.readToEndAllocOptions(allocator, 2 * 1024, null, @alignOf(u8), 0);
+    const fragment_code = try fragment_file.readToEndAllocOptions(allocator, 3 * 1024, null, @alignOf(u8), 0);
 
     const vertex_shader = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(vertex_shader, 1, @ptrCast(&vertext_code), null);
@@ -32,7 +34,7 @@ pub fn init(vertex_path: []const u8, fragment_path: []const u8) !Shader {
     }
 
     const fragment_shader = gl.createShader(gl.FRAGMENT_SHADER);
-    gl.shaderSource(fragment_code, 1, @ptrCast(fragment_code), null);
+    gl.shaderSource(fragment_shader, 1, @ptrCast(&fragment_code), null);
     gl.compileShader(fragment_shader);
     gl.getShaderiv(fragment_shader, gl.COMPILE_STATUS, &success);
     if (success[0] == 0) {

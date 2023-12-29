@@ -4,21 +4,13 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    _ = b.addModule("learnopengl", .{
-        .source_file = .{ .path = "src/Shader.zig" },
-    });
-
-    const lib = b.addStaticLibrary(.{
-        .name = "learnopengl",
-        .root_source_file = .{ .path = "src/Shader.zig" },
+    const opengl_dep = b.dependency("opengl", .{
         .target = target,
         .optimize = optimize,
     });
 
-    b.installArtifact(lib);
-
-    // Use OpenGL
-    lib.addModule("gl", b.createModule(.{
-        .source_file = .{ .path = "../../libs/opengl/gl33.zig" },
-    }));
+    _ = b.addModule("learnopengl", .{
+        .source_file = .{ .path = "src/Shader.zig" },
+        .dependencies = &.{.{ .name = "gl", .module = opengl_dep.module("opengl") }},
+    });
 }
