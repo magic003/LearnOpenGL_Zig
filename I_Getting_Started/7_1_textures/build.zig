@@ -40,6 +40,9 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
+    exe.addIncludePath(.{
+        .path = stbi_dep.builder.pathFromRoot(stbi_dep.module("stb_image_include").source_file.path),
+    });
     exe.addModule("stbi", stbi_dep.module("stbi"));
     exe.linkLibrary(stbi_dep.artifact("stbi"));
 
@@ -50,8 +53,16 @@ pub fn build(b: *std.Build) void {
     run_step.dependOn(&run_cmd.step);
 
     // Install the shader files
-    const install_vs_step = b.addInstallFile(.{ .path = "src/7_1_shader.vs" }, "bin/7_1_shader.vs");
+    const install_vs_step = b.addInstallFile(.{ .path = "src/7_1_texture.vs" }, "bin/7_1_texture.vs");
     run_step.dependOn(&install_vs_step.step);
-    const install_fs_step = b.addInstallFile(.{ .path = "src/7_1_shader.fs" }, "bin/7_1_shader.fs");
-    run_step.dependOn(&install_fs_step.step);
+    const install_fs_step = b.addInstallFile(.{ .path = "src/7_1_texture.fs" }, "bin/7_1_texture.fs");
+    exe.step.dependOn(&install_fs_step.step);
+
+    // Install the images
+    const install_image_step = b.addInstallDirectory(.{
+        .source_dir = .{ .path = "images/" },
+        .install_dir = .bin,
+        .install_subdir = "images/",
+    });
+    exe.step.dependOn(&install_image_step.step);
 }

@@ -7,6 +7,9 @@ pub fn build(b: *std.Build) void {
     _ = b.addModule("stbi", .{
         .source_file = .{ .path = "src/c.zig" },
     });
+    _ = b.addModule("stb_image_include", .{
+        .source_file = .{ .path = "src/include/" },
+    });
 
     const lib = b.addStaticLibrary(.{
         .name = "stbi",
