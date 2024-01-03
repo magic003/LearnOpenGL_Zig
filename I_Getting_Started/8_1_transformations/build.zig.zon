@@ -16,6 +16,9 @@
         .stbi = .{
             .path = "../../libs/stbi/",
         },
+        .zmath = .{
+            .path = "../../libs/zmath/",
+        },
     },
 
     .paths = .{

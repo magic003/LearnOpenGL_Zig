@@ -3,6 +3,7 @@ const glfw = @import("mach-glfw");
 const gl = @import("gl");
 const learnopengl = @import("learnopengl");
 const stbi = @import("stbi");
+const zmath = @import("zmath");
 
 pub fn main() !void {
     _ = glfw.init(.{});
@@ -131,6 +132,17 @@ pub fn main() !void {
 
         shader.use();
         gl.bindVertexArray(vao);
+
+        const rot = zmath.rotationZ(@floatCast(glfw.getTime()));
+        const scale = zmath.scaling(0.5, 0.5, 0.5);
+        const translate = zmath.translation(0.5, -0.5, 0);
+        const trans = zmath.mul(translate, zmath.mul(rot, scale));
+        var transform: [4 * 4]f32 = undefined;
+        zmath.storeMat(&transform, trans);
+
+        const transformLoc = gl.getUniformLocation(shader.ID, "transform");
+        gl.uniformMatrix4fv(transformLoc, 1, gl.FALSE, &transform);
+
         gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, null);
 
         glfw.pollEvents();
