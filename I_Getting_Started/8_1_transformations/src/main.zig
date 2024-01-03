@@ -136,7 +136,7 @@ pub fn main() !void {
         const rot = zmath.rotationZ(@floatCast(glfw.getTime()));
         const scale = zmath.scaling(0.5, 0.5, 0.5);
         const translate = zmath.translation(0.5, -0.5, 0);
-        const trans = zmath.mul(translate, zmath.mul(rot, scale));
+        const trans = zmath.mul(rot, zmath.mul(translate, scale));
         var transform: [4 * 4]f32 = undefined;
         zmath.storeMat(&transform, trans);
 
