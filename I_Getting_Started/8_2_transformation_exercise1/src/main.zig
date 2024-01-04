@@ -30,7 +30,7 @@ pub fn main() !void {
     gl.viewport(0, 0, @intCast(width), @intCast(height));
     window.setFramebufferSizeCallback(frameBufferSizeCallback);
 
-    const shader = try learnopengl.Shader.init("8_1_transformations.vs", "8_1_transformations.fs");
+    const shader = try learnopengl.Shader.init("8_2_transformations.vs", "8_2_transformations.fs");
 
     // set up vertex data and configure vertex attributes
     const vertices = [_]f32{
