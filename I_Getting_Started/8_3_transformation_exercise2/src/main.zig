@@ -133,14 +133,25 @@ pub fn main() !void {
         shader.use();
         gl.bindVertexArray(vao);
 
+        // first container
         const rot = zmath.rotationZ(@floatCast(glfw.getTime()));
-        const scale = zmath.scaling(0.5, 0.5, 0.5);
         const translate = zmath.translation(0.5, -0.5, 0);
-        const trans = zmath.mul(translate, zmath.mul(rot, scale));
+        const trans = zmath.mul(translate, rot);
         var transform: [4 * 4]f32 = undefined;
         zmath.storeMat(&transform, trans);
 
         const transformLoc = gl.getUniformLocation(shader.ID, "transform");
+        gl.uniformMatrix4fv(transformLoc, 1, gl.FALSE, &transform);
+
+        gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, null);
+
+        // second transformation
+        const scale_amount = @sin(@as(f32, @floatCast(glfw.getTime())));
+        const scale2 = zmath.scaling(scale_amount, scale_amount, scale_amount);
+        const translate2 = zmath.translation(-0.5, 0.5, 0);
+        const trans2 = zmath.mul(translate2, scale2);
+        zmath.storeMat(&transform, trans2);
+
         gl.uniformMatrix4fv(transformLoc, 1, gl.FALSE, &transform);
 
         gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, null);
