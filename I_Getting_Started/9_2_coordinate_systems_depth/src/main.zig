@@ -31,45 +31,72 @@ pub fn main() !void {
     gl.viewport(0, 0, @intCast(width), @intCast(height));
     window.setFramebufferSizeCallback(frameBufferSizeCallback);
 
+    gl.enable(gl.DEPTH_TEST);
+
     const shader = try learnopengl.Shader.init("9_2_coordinate_systems.vs", "9_2_coordinate_systems.fs");
 
     // set up vertex data and configure vertex attributes
     const vertices = [_]f32{
-        // positions       // colors        // texture coords
-        0.5, 0.5, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, // top right
-        0.5, -0.5, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, // bottom right
-        -0.5, -0.5, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, // bottom left
-        -0.5, 0.5, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, // top left
-    };
-    const indices = [_]c_uint{
-        0, 1, 3,
-        1, 2, 3,
+        // positions      // texture coords
+        -0.5, -0.5, -0.5, 0.0, 0.0,
+        0.5,  -0.5, -0.5, 1.0, 0.0,
+        0.5,  0.5,  -0.5, 1.0, 1.0,
+        0.5,  0.5,  -0.5, 1.0, 1.0,
+        -0.5, 0.5,  -0.5, 0.0, 1.0,
+        -0.5, -0.5, -0.5, 0.0, 0.0,
+
+        -0.5, -0.5, 0.5,  0.0, 0.0,
+        0.5,  -0.5, 0.5,  1.0, 0.0,
+        0.5,  0.5,  0.5,  1.0, 1.0,
+        0.5,  0.5,  0.5,  1.0, 1.0,
+        -0.5, 0.5,  0.5,  0.0, 1.0,
+        -0.5, -0.5, 0.5,  0.0, 0.0,
+
+        -0.5, 0.5,  0.5,  1.0, 0.0,
+        -0.5, 0.5,  -0.5, 1.0, 1.0,
+        -0.5, -0.5, -0.5, 0.0, 1.0,
+        -0.5, -0.5, -0.5, 0.0, 1.0,
+        -0.5, -0.5, 0.5,  0.0, 0.0,
+        -0.5, 0.5,  0.5,  1.0, 0.0,
+
+        0.5,  0.5,  0.5,  1.0, 0.0,
+        0.5,  0.5,  -0.5, 1.0, 1.0,
+        0.5,  -0.5, -0.5, 0.0, 1.0,
+        0.5,  -0.5, -0.5, 0.0, 1.0,
+        0.5,  -0.5, 0.5,  0.0, 0.0,
+        0.5,  0.5,  0.5,  1.0, 0.0,
+
+        -0.5, -0.5, -0.5, 0.0, 1.0,
+        0.5,  -0.5, -0.5, 1.0, 1.0,
+        0.5,  -0.5, 0.5,  1.0, 0.0,
+        0.5,  -0.5, 0.5,  1.0, 0.0,
+        -0.5, -0.5, 0.5,  0.0, 0.0,
+        -0.5, -0.5, -0.5, 0.0, 1.0,
+
+        -0.5, 0.5,  -0.5, 0.0, 1.0,
+        0.5,  0.5,  -0.5, 1.0, 1.0,
+        0.5,  0.5,  0.5,  1.0, 0.0,
+        0.5,  0.5,  0.5,  1.0, 0.0,
+        -0.5, 0.5,  0.5,  0.0, 0.0,
+        -0.5, 0.5,  -0.5, 0.0, 1.0,
     };
 
     var vao: c_uint = undefined;
     var vbo: c_uint = undefined;
-    var ebo: c_uint = undefined;
     gl.genVertexArrays(1, &vao);
     defer gl.deleteVertexArrays(1, &vao);
     gl.genBuffers(1, &vbo);
     defer gl.deleteBuffers(1, &vbo);
-    gl.genBuffers(1, &ebo);
-    defer gl.deleteBuffers(1, &ebo);
 
     gl.bindVertexArray(vao);
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     gl.bufferData(gl.ARRAY_BUFFER, @sizeOf(f32) * vertices.len, &vertices, gl.STATIC_DRAW);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, @sizeOf(c_uint) * indices.len, &indices, gl.STATIC_DRAW);
 
-    gl.vertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, 8 * @sizeOf(f32), null);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, 5 * @sizeOf(f32), null);
     gl.enableVertexAttribArray(0);
-    const color_offset: [*c]c_uint = (3 * @sizeOf(f32));
-    gl.vertexAttribPointer(1, 3, gl.FLOAT, gl.FALSE, 8 * @sizeOf(f32), color_offset);
+    const tex_offset: [*c]c_uint = (3 * @sizeOf(f32));
+    gl.vertexAttribPointer(1, 2, gl.FLOAT, gl.FALSE, 5 * @sizeOf(f32), tex_offset);
     gl.enableVertexAttribArray(1);
-    const tex_offset: [*c]c_uint = (6 * @sizeOf(f32));
-    gl.vertexAttribPointer(2, 2, gl.FLOAT, gl.FALSE, 8 * @sizeOf(f32), tex_offset);
-    gl.enableVertexAttribArray(2);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, 0);
     gl.bindVertexArray(0);
@@ -124,7 +151,7 @@ pub fn main() !void {
         processInput(window);
 
         gl.clearColor(0.2, 0.3, 0.3, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, texture1);
@@ -134,24 +161,17 @@ pub fn main() !void {
         shader.use();
         gl.bindVertexArray(vao);
 
-        // const rot = zmath.rotationZ(@floatCast(glfw.getTime()));
-        // const scale = zmath.scaling(0.5, 0.5, 0.5);
-        // const translate = zmath.translation(0.5, -0.5, 0);
-        // const trans = zmath.mul(rot, zmath.mul(translate, scale));
-        // var transform: [4 * 4]f32 = undefined;
-        // zmath.storeMat(&transform, trans);
-
-        // const transformLoc = gl.getUniformLocation(shader.ID, "transform");
-        // gl.uniformMatrix4fv(transformLoc, 1, gl.FALSE, &transform);
-
-        const model = zmath.rotationX(to_radians(-55.0));
-        var model_mat: [4*4]f32 = undefined;
+        const model = zmath.matFromAxisAngle(
+            zmath.f32x4(0.5, 1.0, 0.0, 0.0),
+            @floatCast(glfw.getTime() * to_radians(50.0)),
+        );
+        var model_mat: [4 * 4]f32 = undefined;
         zmath.storeMat(&model_mat, model);
         const view = zmath.translation(0.0, 0.0, -3.0);
-        var view_mat: [4*4]f32 = undefined;
+        var view_mat: [4 * 4]f32 = undefined;
         zmath.storeMat(&view_mat, view);
         const projection = zmath.perspectiveFovRhGl(to_radians(45), 800.0 / 600.0, 0.1, 100.0);
-        var projection_mat: [4*4]f32 = undefined;
+        var projection_mat: [4 * 4]f32 = undefined;
         zmath.storeMat(&projection_mat, projection);
 
         const model_loc = gl.getUniformLocation(shader.ID, "model");
@@ -161,7 +181,7 @@ pub fn main() !void {
         const projection_loc = gl.getUniformLocation(shader.ID, "projection");
         gl.uniformMatrix4fv(projection_loc, 1, gl.FALSE, &projection_mat);
 
-        gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, null);
+        gl.drawArrays(gl.TRIANGLES, 0, 36);
 
         glfw.pollEvents();
         window.swapBuffers();
