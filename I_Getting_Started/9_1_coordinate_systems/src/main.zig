@@ -1,4 +1,5 @@
 const std = @import("std");
+const math = std.math;
 const glfw = @import("mach-glfw");
 const gl = @import("gl");
 const learnopengl = @import("learnopengl");
@@ -133,6 +134,33 @@ pub fn main() !void {
         shader.use();
         gl.bindVertexArray(vao);
 
+        // const rot = zmath.rotationZ(@floatCast(glfw.getTime()));
+        // const scale = zmath.scaling(0.5, 0.5, 0.5);
+        // const translate = zmath.translation(0.5, -0.5, 0);
+        // const trans = zmath.mul(rot, zmath.mul(translate, scale));
+        // var transform: [4 * 4]f32 = undefined;
+        // zmath.storeMat(&transform, trans);
+
+        // const transformLoc = gl.getUniformLocation(shader.ID, "transform");
+        // gl.uniformMatrix4fv(transformLoc, 1, gl.FALSE, &transform);
+
+        const model = zmath.rotationX(to_radians(-55.0));
+        var model_mat: [4*4]f32 = undefined;
+        zmath.storeMat(&model_mat, model);
+        const view = zmath.translation(0.0, 0.0, -3.0);
+        var view_mat: [4*4]f32 = undefined;
+        zmath.storeMat(&view_mat, view);
+        const projection = zmath.perspectiveFovRhGl(to_radians(45), 800.0 / 600.0, 0.1, 100.0);
+        var projection_mat: [4*4]f32 = undefined;
+        zmath.storeMat(&projection_mat, projection);
+
+        const model_loc = gl.getUniformLocation(shader.ID, "model");
+        gl.uniformMatrix4fv(model_loc, 1, gl.FALSE, &model_mat);
+        const view_loc = gl.getUniformLocation(shader.ID, "view");
+        gl.uniformMatrix4fv(view_loc, 1, gl.FALSE, &view_mat);
+        const projection_loc = gl.getUniformLocation(shader.ID, "projection");
+        gl.uniformMatrix4fv(projection_loc, 1, gl.FALSE, &projection_mat);
+
         gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, null);
 
         glfw.pollEvents();
@@ -152,4 +180,8 @@ fn processInput(window: glfw.Window) void {
     if (window.getKey(.escape) == .press) {
         window.setShouldClose(true);
     }
+}
+
+inline fn to_radians(angle: f32) f32 {
+    return math.pi * angle / 180.0;
 }
