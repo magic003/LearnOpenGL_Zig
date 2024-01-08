@@ -80,6 +80,18 @@ pub fn main() !void {
         -0.5, 0.5,  0.5,  0.0, 0.0,
         -0.5, 0.5,  -0.5, 0.0, 1.0,
     };
+    const cube_positions = [_][3]f32{
+        .{ 0.0, 0.0, 0.0 },
+        .{ 2.0, 5.0, -15.0 },
+        .{ -1.5, -2.2, -2.5 },
+        .{ -3.8, -2.0, -12.3 },
+        .{ 2.4, -0.4, -3.5 },
+        .{ -1.7, 3.0, -7.5 },
+        .{ 1.3, -2.0, -2.5 },
+        .{ 1.5, 2.0, -2.5 },
+        .{ 1.5, 0.2, -1.5 },
+        .{ -1.3, 1.0, -1.5 },
+    };
 
     var vao: c_uint = undefined;
     var vbo: c_uint = undefined;
@@ -161,12 +173,6 @@ pub fn main() !void {
         shader.use();
         gl.bindVertexArray(vao);
 
-        const model = zmath.matFromAxisAngle(
-            zmath.f32x4(0.5, 1.0, 0.0, 0.0),
-            @floatCast(glfw.getTime() * to_radians(50.0)),
-        );
-        var model_mat: [4 * 4]f32 = undefined;
-        zmath.storeMat(&model_mat, model);
         const view = zmath.translation(0.0, 0.0, -3.0);
         var view_mat: [4 * 4]f32 = undefined;
         zmath.storeMat(&view_mat, view);
@@ -174,14 +180,28 @@ pub fn main() !void {
         var projection_mat: [4 * 4]f32 = undefined;
         zmath.storeMat(&projection_mat, projection);
 
-        const model_loc = gl.getUniformLocation(shader.ID, "model");
-        gl.uniformMatrix4fv(model_loc, 1, gl.FALSE, &model_mat);
         const view_loc = gl.getUniformLocation(shader.ID, "view");
         gl.uniformMatrix4fv(view_loc, 1, gl.FALSE, &view_mat);
         const projection_loc = gl.getUniformLocation(shader.ID, "projection");
         gl.uniformMatrix4fv(projection_loc, 1, gl.FALSE, &projection_mat);
 
-        gl.drawArrays(gl.TRIANGLES, 0, 36);
+        for (cube_positions, 0..) |cube_position, i| {
+            const translate = zmath.translation(cube_position[0], cube_position[1], cube_position[2]);
+
+            const angle: f32 = 20.0 * @as(f32, @floatFromInt(i));
+            const rotation = zmath.matFromAxisAngle(
+                zmath.f32x4(0.5, 1.0, 0.0, 0.0),
+                @floatCast(to_radians(angle)),
+            );
+            const model = zmath.mul(rotation, translate);
+            var model_mat: [4 * 4]f32 = undefined;
+            zmath.storeMat(&model_mat, model);
+
+            const model_loc = gl.getUniformLocation(shader.ID, "model");
+            gl.uniformMatrix4fv(model_loc, 1, gl.FALSE, &model_mat);
+
+            gl.drawArrays(gl.TRIANGLES, 0, 36);
+        }
 
         glfw.pollEvents();
         window.swapBuffers();
