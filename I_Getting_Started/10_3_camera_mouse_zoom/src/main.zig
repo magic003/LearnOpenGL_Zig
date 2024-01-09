@@ -13,6 +13,13 @@ var camera_up = zmath.f32x4(0.0, 1.0, 0.0, 0.0);
 var delta_time: f32 = 0.0;
 var last_frame: f32 = 0.0;
 
+var first_mouse = true;
+var yaw: f32 = -90.0;
+var pitch: f32 = 0.0;
+var last_x: f32 = 400;
+var last_y: f32 = 300;
+var fov: f32 = 45.0;
+
 pub fn main() !void {
     _ = glfw.init(.{});
     defer glfw.terminate();
@@ -31,6 +38,11 @@ pub fn main() !void {
     defer window.destroy();
 
     glfw.makeContextCurrent(window);
+
+    window.setCursorPosCallback(mouseCallback);
+    window.setScrollCallback(scrollCallback);
+
+    window.setInputMode(.cursor, .disabled);
 
     const proc: glfw.GLProc = undefined;
     try gl.load(proc, glGetProcAddress);
@@ -187,7 +199,7 @@ pub fn main() !void {
         );
         var view_mat: [4 * 4]f32 = undefined;
         zmath.storeMat(&view_mat, view);
-        const projection = zmath.perspectiveFovRhGl(to_radians(45), 800.0 / 600.0, 0.1, 100.0);
+        const projection = zmath.perspectiveFovRhGl(to_radians(fov), 800.0 / 600.0, 0.1, 100.0);
         var projection_mat: [4 * 4]f32 = undefined;
         zmath.storeMat(&projection_mat, projection);
 
@@ -225,6 +237,45 @@ fn glGetProcAddress(_: glfw.GLProc, proc: [:0]const u8) ?*const anyopaque {
 
 fn frameBufferSizeCallback(_: glfw.Window, width: u32, height: u32) void {
     gl.viewport(0, 0, @intCast(width), @intCast(height));
+}
+
+fn mouseCallback(_: glfw.Window, xpos: f64, ypos: f64) void {
+    if (first_mouse) {
+        last_x = @floatCast(xpos);
+        last_y = @floatCast(ypos);
+        first_mouse = false;
+    }
+    const x_offset: f32 = @floatCast(xpos - last_x);
+    const y_offset: f32 = @floatCast(last_y - ypos);
+
+    last_x = @floatCast(xpos);
+    last_y = @floatCast(ypos);
+
+    const sensitivity: f32 = 0.1;
+
+    yaw += x_offset * sensitivity;
+    pitch += y_offset * sensitivity;
+    if (pitch > 89.0) {
+        pitch = 89.0;
+    }
+    if (pitch < -89.0) {
+        pitch = -89.0;
+    }
+
+    const x_direction = @cos(to_radians(yaw)) * @cos(to_radians(pitch));
+    const y_direction = @sin(to_radians(pitch));
+    const z_direction = @sin(to_radians(yaw)) * @cos(to_radians(pitch));
+    camera_front = zmath.normalize4(zmath.f32x4(x_direction, y_direction, z_direction, 0.0));
+}
+
+fn scrollCallback(_: glfw.Window, _: f64, yoffset: f64) void {
+    fov -= @floatCast(yoffset);
+    if (fov < 1.0) {
+        fov = 1.0;
+    }
+    if (fov > 45.0) {
+        fov = 45.0;
+    }
 }
 
 fn processInput(window: glfw.Window) void {
