@@ -47,14 +47,11 @@ pub fn build(b: *std.Build) void {
     exe.linkLibrary(stbi_dep.artifact("stbi"));
 
     // Use zmath
-    // const zmath_dep = b.dependency("zmath", .{
-    //     .target = target,
-    //     .optimize = optimize,
-    // });
-    // exe.addModule("zmath", zmath_dep.module("zmath"));
-    @import("zmath").package(b, target, optimize, .{
-        .options = .{ .enable_cross_platform_determinism = true },
-    }).link(exe);
+    const zmath_dep = b.dependency("zmath", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    exe.addModule("zmath", zmath_dep.module("zmath"));
 
     const run_cmd = b.addRunArtifact(exe);
     run_cmd.step.dependOn(b.getInstallStep());
