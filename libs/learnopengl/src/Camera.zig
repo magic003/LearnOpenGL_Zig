@@ -16,9 +16,9 @@ const MOUSE_SENSITIVITY: f32 = 0.1;
 
 // camera attributes
 position: zmath.Vec,
-front: zmath.Vec,
-up: zmath.Vec,
-right: zmath.Vec,
+front: zmath.Vec = undefined,
+up: zmath.Vec = undefined,
+right: zmath.Vec = undefined,
 world_up: zmath.Vec,
 yaw: f32,
 pitch: f32,
@@ -26,7 +26,7 @@ zoom: f32 = 45.0,
 
 /// Creates a new Camera instance.
 pub fn init(position: zmath.Vec, world_up: zmath.Vec, yaw: f32, pitch: f32) Camera {
-    const camera = Camera{
+    var camera = Camera{
         .position = position,
         .world_up = world_up,
         .yaw = yaw,
@@ -53,11 +53,8 @@ pub fn processKeyboard(self: *Camera, direction: CameraMovement, delta_time: f32
 }
 /// processes input received from a mouse input system. Expects the offset value in both the x and y direction.
 pub fn processMouseMovement(self: *Camera, xoffset: f32, yoffset: f32, constraint_pitch: bool) void {
-    xoffset *= MOUSE_SENSITIVITY;
-    yoffset *= MOUSE_SENSITIVITY;
-
-    self.yaw += xoffset;
-    self.pitch += yoffset;
+    self.yaw += xoffset * MOUSE_SENSITIVITY;
+    self.pitch += yoffset * MOUSE_SENSITIVITY;
 
     if (constraint_pitch) {
         if (self.pitch > 89.0) {
@@ -88,7 +85,7 @@ fn updateCameraVectors(self: *Camera) void {
     const front_y = @sin(toRadians(self.pitch));
     const front_z = @sin(toRadians(self.yaw)) * @cos(toRadians(self.pitch));
 
-    self.front = zmath.normalize3(zmath.loadArr3(front_x, front_y, front_z));
+    self.front = zmath.normalize3(zmath.loadArr3(.{ front_x, front_y, front_z }));
     self.right = zmath.normalize3(zmath.cross3(self.front, self.world_up));
     self.up = zmath.normalize3(zmath.cross3(self.right, self.front));
 }
