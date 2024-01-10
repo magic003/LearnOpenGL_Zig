@@ -8,9 +8,16 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
+    const zmath_dep = b.dependency("zmath", .{
+        .target = target,
+        .optimize = optimize,
+    });
 
     _ = b.addModule("learnopengl", .{
-        .source_file = .{ .path = "src/Shader.zig" },
-        .dependencies = &.{.{ .name = "gl", .module = opengl_dep.module("opengl") }},
+        .source_file = .{ .path = "src/main.zig" },
+        .dependencies = &.{
+            .{ .name = "gl", .module = opengl_dep.module("opengl") },
+            .{ .name = "zmath", .module = zmath_dep.module("zmath") },
+        },
     });
 }

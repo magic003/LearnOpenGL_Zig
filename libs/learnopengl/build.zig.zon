@@ -6,6 +6,9 @@
         .opengl = .{
             .path = "../opengl/",
         },
+        .zmath = .{
+            .path = "../zmath/",
+        },
     },
 
     .paths = .{
