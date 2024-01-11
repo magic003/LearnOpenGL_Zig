@@ -6,6 +6,9 @@ The code is organized according to the parts and chapters in the book. For examp
 
 The shared libraries live in the `libs` folder.
 
+## Zig version
+The code was tested using Zig 0.12.0-dev.1856+94c63f31f and above. It will keep up with the master version.
+
 ## How to run it
 To run a particular sample, just go to its folder and run `zig build run`.
 
