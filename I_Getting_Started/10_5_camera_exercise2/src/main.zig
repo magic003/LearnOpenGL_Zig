@@ -6,20 +6,6 @@ const learnopengl = @import("learnopengl");
 const stbi = @import("stbi");
 const zmath = @import("zmath");
 
-var camera_pos = zmath.f32x4(0.0, 0.0, 3.0, 0.0);
-var camera_front = zmath.f32x4(0.0, 0.0, -1, 0.0);
-var camera_up = zmath.f32x4(0.0, 1.0, 0.0, 0.0);
-
-var delta_time: f32 = 0.0;
-var last_frame: f32 = 0.0;
-
-var first_mouse = true;
-var yaw: f32 = -90.0;
-var pitch: f32 = 0.0;
-var last_x: f32 = 400;
-var last_y: f32 = 300;
-var fov: f32 = 45.0;
-
 pub fn main() !void {
     _ = glfw.init(.{});
     defer glfw.terminate();
@@ -39,11 +25,6 @@ pub fn main() !void {
 
     glfw.makeContextCurrent(window);
 
-    window.setCursorPosCallback(mouseCallback);
-    window.setScrollCallback(scrollCallback);
-
-    window.setInputMode(.cursor, .disabled);
-
     const proc: glfw.GLProc = undefined;
     try gl.load(proc, glGetProcAddress);
 
@@ -52,7 +33,7 @@ pub fn main() !void {
 
     gl.enable(gl.DEPTH_TEST);
 
-    const shader = try learnopengl.Shader.init("10_5_camera.vs", "10_5_camera.fs");
+    const shader = try learnopengl.Shader.init("10_1_camera.vs", "10_1_camera.fs");
 
     // set up vertex data and configure vertex attributes
     const vertices = [_]f32{
@@ -192,14 +173,17 @@ pub fn main() !void {
         shader.use();
         gl.bindVertexArray(vao);
 
-        const view = zmath.lookAtRh(
-            camera_pos,
-            camera_pos + camera_front,
-            camera_up,
+        const radius: f32 = 10.0;
+        const cam_x = @as(f32, @floatCast(@sin(glfw.getTime()))) * radius;
+        const cam_z = @as(f32, @floatCast(@cos(glfw.getTime()))) * radius;
+        const view = calculateLookAtMatrix(
+            zmath.f32x4(cam_x, 0.0, cam_z, 0.0),
+            zmath.f32x4s(0.0),
+            zmath.f32x4(0.0, 1.0, 0.0, 0.0),
         );
         var view_mat: [4 * 4]f32 = undefined;
         zmath.storeMat(&view_mat, view);
-        const projection = zmath.perspectiveFovRhGl(to_radians(fov), 800.0 / 600.0, 0.1, 100.0);
+        const projection = zmath.perspectiveFovRhGl(to_radians(45), 800.0 / 600.0, 0.1, 100.0);
         var projection_mat: [4 * 4]f32 = undefined;
         zmath.storeMat(&projection_mat, projection);
 
@@ -239,68 +223,38 @@ fn frameBufferSizeCallback(_: glfw.Window, width: u32, height: u32) void {
     gl.viewport(0, 0, @intCast(width), @intCast(height));
 }
 
-fn mouseCallback(_: glfw.Window, xpos: f64, ypos: f64) void {
-    if (first_mouse) {
-        last_x = @floatCast(xpos);
-        last_y = @floatCast(ypos);
-        first_mouse = false;
-    }
-    const x_offset: f32 = @floatCast(xpos - last_x);
-    const y_offset: f32 = @floatCast(last_y - ypos);
-
-    last_x = @floatCast(xpos);
-    last_y = @floatCast(ypos);
-
-    const sensitivity: f32 = 0.1;
-
-    yaw += x_offset * sensitivity;
-    pitch += y_offset * sensitivity;
-    if (pitch > 89.0) {
-        pitch = 89.0;
-    }
-    if (pitch < -89.0) {
-        pitch = -89.0;
-    }
-
-    const x_direction = @cos(to_radians(yaw)) * @cos(to_radians(pitch));
-    const y_direction = @sin(to_radians(pitch));
-    const z_direction = @sin(to_radians(yaw)) * @cos(to_radians(pitch));
-    camera_front = zmath.normalize4(zmath.f32x4(x_direction, y_direction, z_direction, 0.0));
-}
-
-fn scrollCallback(_: glfw.Window, _: f64, yoffset: f64) void {
-    fov -= @floatCast(yoffset);
-    if (fov < 1.0) {
-        fov = 1.0;
-    }
-    if (fov > 45.0) {
-        fov = 45.0;
-    }
-}
-
 fn processInput(window: glfw.Window) void {
     if (window.getKey(.escape) == .press) {
         window.setShouldClose(true);
-    }
-
-    const current_frame = @as(f32, @floatCast(glfw.getTime()));
-    delta_time = current_frame - last_frame;
-    last_frame = current_frame;
-    const camera_speed: f32 = 2.5 * delta_time;
-    if (window.getKey(.w) == .press) {
-        camera_pos += camera_front * zmath.f32x4s(camera_speed);
-    }
-    if (window.getKey(.s) == .press) {
-        camera_pos -= camera_front * zmath.f32x4s(camera_speed);
-    }
-    if (window.getKey(.a) == .press) {
-        camera_pos -= zmath.normalize3(zmath.cross3(camera_front, camera_up)) * zmath.f32x4s(camera_speed);
-    }
-    if (window.getKey(.d) == .press) {
-        camera_pos += zmath.normalize3(zmath.cross3(camera_front, camera_up)) * zmath.f32x4s(camera_speed);
     }
 }
 
 inline fn to_radians(angle: f32) f32 {
     return math.pi * angle / 180.0;
+}
+
+fn calculateLookAtMatrix(position: zmath.Vec, target: zmath.Vec, world_up: zmath.Vec) zmath.Mat {
+    const direction = zmath.normalize3(position - target);
+    const right = zmath.normalize3(zmath.cross3(world_up, direction));
+    const up = zmath.normalize3(zmath.cross3(direction, right));
+
+    var translation = zmath.identity();
+    translation[0][3] -= position[0];
+    translation[1][3] -= position[1];
+    translation[2][3] -= position[2];
+
+    var rotation = zmath.identity();
+    rotation[0][0] = right[0];
+    rotation[0][1] = right[1];
+    rotation[0][2] = right[2];
+
+    rotation[1][0] = up[0];
+    rotation[1][1] = up[1];
+    rotation[1][2] = up[2];
+
+    rotation[2][0] = direction[0];
+    rotation[2][1] = direction[1];
+    rotation[2][2] = direction[2];
+
+    return zmath.transpose(zmath.mul(rotation, translation));
 }
