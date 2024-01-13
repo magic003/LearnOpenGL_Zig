@@ -6,7 +6,7 @@ const learnopengl = @import("learnopengl");
 const zmath = @import("zmath");
 
 var camera = learnopengl.Camera.init(
-    zmath.loadArr3(.{ 0.1, 0.0, 3.0 }),
+    zmath.loadArr3(.{ 0.1, 0.0, 5.0 }),
     zmath.loadArr3(.{ 0.0, 1.0, 0.0 }),
     -90.0,
     0.0,
@@ -18,6 +18,8 @@ var last_frame: f32 = 0.0;
 var first_mouse = true;
 var last_x: f32 = 400;
 var last_y: f32 = 300;
+
+const light_pos = zmath.loadArr3(.{ 1.2, 1.0, 2.0 });
 
 pub fn main() !void {
     _ = glfw.init(.{});
@@ -51,7 +53,8 @@ pub fn main() !void {
 
     gl.enable(gl.DEPTH_TEST);
 
-    const shader = try learnopengl.Shader.init("shaders/12_1_colors.vs", "shaders/12_1_colors.fs");
+    const lighting_shader = try learnopengl.Shader.init("shaders/12_1_colors.vs", "shaders/12_1_colors.fs");
+    const light_cube_shader = try learnopengl.Shader.init("shaders/12_1_light_cube.vs", "shaders/12_1_light_cube.fs");
 
     // set up vertex data and configure vertex attributes
     const vertices = [_]f32{
@@ -113,6 +116,17 @@ pub fn main() !void {
     gl.vertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, 3 * @sizeOf(f32), null);
     gl.enableVertexAttribArray(0);
 
+    // light cube
+    var light_cube_vao: c_uint = undefined;
+    gl.genVertexArrays(1, &light_cube_vao);
+    defer gl.deleteVertexArrays(1, &light_cube_vao);
+
+    gl.bindVertexArray(light_cube_vao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, 3 * @sizeOf(f32), null);
+    gl.enableVertexAttribArray(0);
+
     gl.bindBuffer(gl.ARRAY_BUFFER, 0);
     gl.bindVertexArray(0);
 
@@ -122,32 +136,51 @@ pub fn main() !void {
         gl.clearColor(0.2, 0.3, 0.3, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        shader.use();
-        gl.bindVertexArray(vao);
+        lighting_shader.use();
 
-        const object_color_loc = gl.getUniformLocation(shader.ID, "objectColor");
+        const object_color_loc = gl.getUniformLocation(lighting_shader.ID, "objectColor");
         gl.uniform3f(object_color_loc, 1.0, 0.5, 0.31);
-        const light_color_loc = gl.getUniformLocation(shader.ID, "lightColor");
+        const light_color_loc = gl.getUniformLocation(lighting_shader.ID, "lightColor");
         gl.uniform3f(light_color_loc, 1.0, 1.0, 1.0);
 
         const model = zmath.identity();
         var model_mat: [4 * 4]f32 = undefined;
         zmath.storeMat(&model_mat, model);
-        const model_loc = gl.getUniformLocation(shader.ID, "model");
+        const model_loc = gl.getUniformLocation(lighting_shader.ID, "model");
         gl.uniformMatrix4fv(model_loc, 1, gl.FALSE, &model_mat);
 
         const view = camera.getViewMatrix();
         var view_mat: [4 * 4]f32 = undefined;
         zmath.storeMat(&view_mat, view);
-        const view_loc = gl.getUniformLocation(shader.ID, "view");
+        const view_loc = gl.getUniformLocation(lighting_shader.ID, "view");
         gl.uniformMatrix4fv(view_loc, 1, gl.FALSE, &view_mat);
 
         const projection = zmath.perspectiveFovRhGl(to_radians(camera.zoom), 800.0 / 600.0, 0.1, 100.0);
         var projection_mat: [4 * 4]f32 = undefined;
         zmath.storeMat(&projection_mat, projection);
-        const projection_loc = gl.getUniformLocation(shader.ID, "projection");
+        const projection_loc = gl.getUniformLocation(lighting_shader.ID, "projection");
         gl.uniformMatrix4fv(projection_loc, 1, gl.FALSE, &projection_mat);
 
+        gl.bindVertexArray(vao);
+        gl.drawArrays(gl.TRIANGLES, 0, 36);
+
+        // light cube
+        light_cube_shader.use();
+
+        const translate = zmath.translationV(light_pos);
+        const light_cube_model = zmath.mul(zmath.scaling(0.2, 0.2, 0.2), translate);
+        var light_cube_model_mat: [4 * 4]f32 = undefined;
+        zmath.storeMat(&light_cube_model_mat, light_cube_model);
+        const light_cube_model_loc = gl.getUniformLocation(light_cube_shader.ID, "model");
+        gl.uniformMatrix4fv(light_cube_model_loc, 1, gl.FALSE, &light_cube_model_mat);
+
+        const light_cube_view_loc = gl.getUniformLocation(lighting_shader.ID, "view");
+        gl.uniformMatrix4fv(light_cube_view_loc, 1, gl.FALSE, &view_mat);
+
+        const light_cube_projection_loc = gl.getUniformLocation(lighting_shader.ID, "projection");
+        gl.uniformMatrix4fv(light_cube_projection_loc, 1, gl.FALSE, &projection_mat);
+
+        gl.bindVertexArray(light_cube_vao);
         gl.drawArrays(gl.TRIANGLES, 0, 36);
 
         glfw.pollEvents();
