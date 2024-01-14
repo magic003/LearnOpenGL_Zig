@@ -143,6 +143,7 @@ pub fn main() !void {
         lighting_shader.setFloat3("objectColor", 1.0, 0.5, 0.31);
         lighting_shader.setFloat3("lightColor", 1.01, 1.01, 1.0);
         lighting_shader.setFloat3("lightPos", light_pos[0], light_pos[1], light_pos[2]);
+        lighting_shader.setFloat3("viewPos", camera.position[0], camera.position[1], camera.position[2]);
 
         const model = zmath.identity();
         var model_mat: [4 * 4]f32 = undefined;
