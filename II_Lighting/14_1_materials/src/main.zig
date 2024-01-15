@@ -141,9 +141,25 @@ pub fn main() !void {
 
         lighting_shader.use();
         lighting_shader.setFloat3("objectColor", 1.0, 0.5, 0.31);
-        lighting_shader.setFloat3("lightColor", 1.01, 1.01, 1.0);
-        lighting_shader.setFloat3("lightPos", light_pos[0], light_pos[1], light_pos[2]);
+        lighting_shader.setFloat3("light.position", light_pos[0], light_pos[1], light_pos[2]);
         lighting_shader.setFloat3("viewPos", camera.position[0], camera.position[1], camera.position[2]);
+
+        lighting_shader.setFloat3("material.ambient", 1.0, 0.5, 0.31);
+        lighting_shader.setFloat3("material.diffuse", 1.0, 0.5, 0.31);
+        lighting_shader.setFloat3("material.specular", 0.5, 0.5, 0.5);
+        lighting_shader.setFloat("material.shininess", 32.0);
+
+        const light_color = zmath.loadArr3(.{
+            @sin(@as(f32, @floatCast(glfw.getTime())) * 2.0),
+            @sin(@as(f32, @floatCast(glfw.getTime())) * 0.7),
+            @sin(@as(f32, @floatCast(glfw.getTime())) * 1.3),
+        });
+        const diffuse_color = zmath.dot3(light_color, zmath.f32x4s(0.5));
+        const ambient_color = zmath.dot3(diffuse_color, zmath.f32x4s(0.2));
+
+        lighting_shader.setFloat3("light.ambient", ambient_color[0], ambient_color[1], ambient_color[2]);
+        lighting_shader.setFloat3("light.diffuse", diffuse_color[0], diffuse_color[1], diffuse_color[2]);
+        lighting_shader.setFloat3("light.specular", 1.0, 1.0, 1.0);
 
         const model = zmath.identity();
         var model_mat: [4 * 4]f32 = undefined;
@@ -173,10 +189,10 @@ pub fn main() !void {
         const light_cube_model_loc = gl.getUniformLocation(light_cube_shader.ID, "model");
         gl.uniformMatrix4fv(light_cube_model_loc, 1, gl.FALSE, &light_cube_model_mat);
 
-        const light_cube_view_loc = gl.getUniformLocation(lighting_shader.ID, "view");
+        const light_cube_view_loc = gl.getUniformLocation(light_cube_shader.ID, "view");
         gl.uniformMatrix4fv(light_cube_view_loc, 1, gl.FALSE, &view_mat);
 
-        const light_cube_projection_loc = gl.getUniformLocation(lighting_shader.ID, "projection");
+        const light_cube_projection_loc = gl.getUniformLocation(light_cube_shader.ID, "projection");
         gl.uniformMatrix4fv(light_cube_projection_loc, 1, gl.FALSE, &projection_mat);
 
         gl.bindVertexArray(light_cube_vao);
