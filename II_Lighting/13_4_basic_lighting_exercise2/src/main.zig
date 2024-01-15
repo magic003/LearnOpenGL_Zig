@@ -173,10 +173,10 @@ pub fn main() !void {
         const light_cube_model_loc = gl.getUniformLocation(light_cube_shader.ID, "model");
         gl.uniformMatrix4fv(light_cube_model_loc, 1, gl.FALSE, &light_cube_model_mat);
 
-        const light_cube_view_loc = gl.getUniformLocation(lighting_shader.ID, "view");
+        const light_cube_view_loc = gl.getUniformLocation(light_cube_shader.ID, "view");
         gl.uniformMatrix4fv(light_cube_view_loc, 1, gl.FALSE, &view_mat);
 
-        const light_cube_projection_loc = gl.getUniformLocation(lighting_shader.ID, "projection");
+        const light_cube_projection_loc = gl.getUniformLocation(light_cube_shader.ID, "projection");
         gl.uniformMatrix4fv(light_cube_projection_loc, 1, gl.FALSE, &projection_mat);
 
         gl.bindVertexArray(light_cube_vao);
