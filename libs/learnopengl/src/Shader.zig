@@ -15,12 +15,12 @@ pub fn init(vertex_path: []const u8, fragment_path: []const u8) !Shader {
     const vertex_abs_path = try std.fs.path.join(allocator, &.{ exe_dir, vertex_path });
     const vertex_file = try std.fs.openFileAbsolute(vertex_abs_path, .{});
     defer vertex_file.close();
-    const vertext_code = try vertex_file.readToEndAllocOptions(allocator, 3 * 1024, null, @alignOf(u8), 0);
+    const vertext_code = try vertex_file.readToEndAllocOptions(allocator, 5 * 1024, null, @alignOf(u8), 0);
 
     const fragment_abs_path = try std.fs.path.join(allocator, &.{ exe_dir, fragment_path });
     const fragment_file = try std.fs.openFileAbsolute(fragment_abs_path, .{});
     defer fragment_file.close();
-    const fragment_code = try fragment_file.readToEndAllocOptions(allocator, 3 * 1024, null, @alignOf(u8), 0);
+    const fragment_code = try fragment_file.readToEndAllocOptions(allocator, 5 * 1024, null, @alignOf(u8), 0);
 
     const vertex_shader = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(vertex_shader, 1, @ptrCast(&vertext_code), null);
